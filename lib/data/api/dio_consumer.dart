@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import 'api_constants.dart';
@@ -13,8 +12,7 @@ import 'api_consumer.dart';
 class DioConsumer implements ApiConsumer {
   final Dio dio;
 
-  final String _dataTime =
-      DateFormat("dd-MM-yyyy").format(DateTime.now().toUtc());
+  
 
   DioConsumer({required this.dio}) {
     (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =

@@ -18,17 +18,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  fetchData(context) {
+  _fetchData(context) {
     BlocProvider.of<EventsCubit>(context).getEvents();
   }
 
   @override
   void initState() {
-    fetchData(context);
+    _fetchData(context);
     super.initState();
   }
 
-  String _formatData(
+  String _formatDate(
       {required String format, required String data, bool addAmOrPm = false}) {
     if (addAmOrPm) {
       return DateFormat(format).add_jm().format(DateTime.parse(data));
@@ -253,98 +253,100 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text(AppString.schedule),
       ),
-      body: BlocBuilder<EventsCubit, EventsState>(
-        builder: (context, state) {
-          print(state);
-          if (state is EventsErorr) {
-            return Center(
-                child: Container(
-              alignment: Alignment.center,
-              width: 300,
-              height: 150,
-              decoration: BoxDecoration(
-                color: ColorManager.error,
-                borderRadius: BorderRadius.circular(AppSize.s12),
-              ),
-              child: Text(
-                state.error,
-                style: Theme.of(context).textTheme.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
-            ));
-          } else if (state is EventsLoaded) {
-            log("${state.data.length}");
-            return SingleChildScrollView(
-                child: ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: state.data.length,
-              itemBuilder: (context, index) {
-                final _date =
-                    _formatData(format: "dd", data: state.data[index].date!);
-
-                final _day =
-                    _formatData(format: "EEE", data: state.data[index].date!);
-
-                return TimelineTile(
-                  isFirst: (index == 0) ? true : false,
-                  isLast: (index == state.data.length - 1) ? true : false,
-                  indicatorStyle: IndicatorStyle(
-                    padding: const EdgeInsets.only(left: AppPadding.p8),
-                    indicatorXY: 0.3,
-                    width: 50,
-                    height: 70,
-                    indicator: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        // shape: BoxShape.rectangle,
-                        color: Colors.redAccent,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Center(
-                            child: Text(
-                              _date,
-                              style: Theme.of(context).textTheme.bodyLarge,
+      body: RefreshIndicator(
+        onRefresh: _fetchData(context),
+        child: BlocBuilder<EventsCubit, EventsState>(
+          builder: (context, state) {
+            if (state is EventsErorr) {
+              return Center(
+                  child: Container(
+                alignment: Alignment.center,
+                width: 300,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: ColorManager.error,
+                  borderRadius: BorderRadius.circular(AppSize.s12),
+                ),
+                child: Text(
+                  state.error,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+              ));
+            } else if (state is EventsLoaded) {
+              log("${state.data.length}");
+              return SingleChildScrollView(
+                  child: ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: state.data.length,
+                itemBuilder: (context, index) {
+                  final _date =
+                      _formatDate(format: "dd", data: state.data[index].date!);
+      
+                  final _day =
+                      _formatDate(format: "EEE", data: state.data[index].date!);
+      
+                  return TimelineTile(
+                    isFirst: (index == 0) ? true : false,
+                    isLast: (index == state.data.length - 1) ? true : false,
+                    indicatorStyle: IndicatorStyle(
+                      padding: const EdgeInsets.only(left: AppPadding.p8),
+                      indicatorXY: 0.3,
+                      width: 50,
+                      height: 70,
+                      indicator: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          // shape: BoxShape.rectangle,
+                          color: Colors.redAccent,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Center(
+                              child: Text(
+                                _date,
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
                             ),
-                          ),
-                          const SizedBox(
-                            height: AppSize.s1_5,
-                          ),
-                          Center(
-                            child: Text(
-                              _day,
-                              style: Theme.of(context).textTheme.bodyLarge,
+                            const SizedBox(
+                              height: AppSize.s1_5,
                             ),
-                          ),
-                        ],
+                            Center(
+                              child: Text(
+                                _day,
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  endChild: _buildCardWidget(
-                      eventName: state.data[index].title!,
-                      placeName: state.data[index].placeName!,
-                      data: _formatData(
-                          format: "EEEEEE, dd MMM yyyy . hh:mm",
-                          data: state.data[index].date!,
-                          addAmOrPm: true),
-                      endDate: _getDifrenceDate(
-                              firstData: state.data[index].date,
-                              endDate: state.data[index].finishDate) 
-                          ,
-                      spot: state.data[index].spots!,
-                      intrest: state.data[index].tag!.title!,
-                      price: state.data[index].price!),
-                );
-              },
-            ));
-          } else {
-            return const Center(
-              child: CircularProgressIndicator.adaptive(),
-            );
-          }
-        },
+                    endChild: _buildCardWidget(
+                        eventName: state.data[index].title!,
+                        placeName: state.data[index].placeName!,
+                        data: _formatDate(
+                            format: "EEEEEE, dd MMM yyyy . hh:mm",
+                            data: state.data[index].date!,
+                            addAmOrPm: true),
+                        endDate: _getDifrenceDate(
+                                firstData: state.data[index].date,
+                                endDate: state.data[index].finishDate) 
+                            ,
+                        spot: state.data[index].spots!,
+                        intrest: state.data[index].tag!.title!,
+                        price: state.data[index].price!),
+                  );
+                },
+              ));
+            } else {
+              return const Center(
+                child: CircularProgressIndicator.adaptive(),
+              );
+            }
+          },
+        ),
       ),
     );
   }
